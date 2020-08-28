@@ -1,26 +1,29 @@
 """ Main file """
 
-from notion.client import NotionClient
-from app import my_secrets
-from app.memorization_time import MemorizationTime
+import requests
+from app.notion import Notion
+
+
+def is_internet():
+    """ Return true if there's an internet connection,
+        false otherwise """
+    try:
+        _ = requests.get("http://www.google.com/", timeout=2)
+        return True
+    except requests.ConnectionError:
+        print("Internet connection error")
+    return False
+
+def main():
+    """ Main part of the app which gets the data
+    and creates the Sheet """
+    notion = Notion()
+    for time in notion.memorization_times:
+        print(f"Time: {time.duration} \t Date: {time.date}")
+
 
 if __name__ == "__main__":
     print("Starting app...")
 
-    client = NotionClient(token_v2=my_secrets.TOKEN_V2)
-
-    collection_view = client.get_collection_view(
-        url_or_id=my_secrets.MEMORIZATION_TIMES_TABLE_URL
-    )
-
-    memorization_times = []
-    print("Retrieving data from: " + collection_view.collection.name)
-    for row in collection_view.collection.get_rows():
-        date = row.date
-        if len(date) > 13:
-            date = date[:14]
-        mt = MemorizationTime(date=date, duration=row.time)
-        memorization_times.append(mt)
-
-    for time in memorization_times:
-        print(f"Time: {time.duration} \t Date: {time.date}")
+    if is_internet():
+        main()
