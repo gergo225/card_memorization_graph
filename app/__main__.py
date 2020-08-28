@@ -30,3 +30,6 @@ if __name__ == "__main__":
     # if is_internet():
     #     main()
     sheets = Sheets()
+    sheetId = sheets.create_spreadsheet("Created from Python")
+
+    print(f"The ID of the Spreadsheet: {sheetId}")

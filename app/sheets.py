@@ -8,16 +8,15 @@ from google.auth.transport.requests import Request
 # full access scope
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-# replace with valid spreadsheet id and range
-SPREADHSHEET_ID = "1M4bxxPFab4YAprOV96Nofi_2S3E5iRxoUqm0AB49E9s"
-SAMPLE_RANGE = "Sheet1!A1:B3"
-
 
 class Sheets:
     """ Class to handle Google Sheets communication
 
     Methods
     -------
+    create_spreadsheet(title)
+        Creates a new spreadsheet with the given title
+        and returns it's id
     """
 
     def __init__(self):
@@ -40,16 +39,25 @@ class Sheets:
 
         self.__service = build("sheets", "v4", credentials=creds)
 
-        sheet = self.__service.spreadsheets()  # pylint: disable=maybe-no-member
-        result = (
-            sheet.values()
-            .get(spreadsheetId=SPREADHSHEET_ID, range=SAMPLE_RANGE)
+    def create_spreadsheet(self, title: str) -> str:
+        """ Create a new spreadsheet with the 'title'
+        and returns it's id
+
+        Params
+        ------
+        title : str
+            The title of the spreadsheet to create
+
+        Returns
+        -------
+        string
+            Id of the created spreadsheet
+        """
+        spreadsheet = {"properties": {"title": title}}
+        spreadsheet = (
+            self.__service.spreadsheets()  # pylint: disable=maybe-no-member
+            .create(body=spreadsheet, fields="spreadsheetId")
             .execute()
         )
-        values = result.get("values", [])
 
-        if not values:
-            print("No data found")
-        else:
-            for row in values:
-                print(f"Name: {row[0]} \t Mark: {row[1]}")
+        return spreadsheet.get("spreadsheetId")
