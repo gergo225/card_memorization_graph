@@ -2,3 +2,5 @@ venv/
 .vscode/
 app/__pycache__
 app/my_secrets.py
+credentials.json
+token.pickle

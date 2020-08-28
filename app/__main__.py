@@ -2,6 +2,7 @@
 
 import requests
 from app.notion import Notion
+from app.sheets import Sheets
 
 
 def is_internet():
@@ -14,6 +15,7 @@ def is_internet():
         print("Internet connection error")
     return False
 
+
 def main():
     """ Main part of the app which gets the data
     and creates the Sheet """
@@ -25,5 +27,6 @@ def main():
 if __name__ == "__main__":
     print("Starting app...")
 
-    if is_internet():
-        main()
+    # if is_internet():
+    #     main()
+    sheets = Sheets()
