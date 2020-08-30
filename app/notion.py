@@ -11,7 +11,7 @@ class Notion:
     Attribues
     ---------
     memorization_times : list of MemorizationTime
-        Stores the memorization times
+        Stores the memorization times ordered by date
     """
 
     def __init__(self):
@@ -32,9 +32,11 @@ class Notion:
             if len(date) > 13:
                 date = date[:14]
             time = MemorizationTime(date=date, duration=row.time)
-            self.__memorization_times.append(time)
+            if date:
+                self.__memorization_times.append(time)
+        self.__memorization_times.reverse()
 
     @property
     def memorization_times(self):
-        """ Get memorization times (read-only) """
+        """ Get memorization times which have dates (read-only) """
         return self.__memorization_times

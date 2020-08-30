@@ -32,9 +32,15 @@ class MemorizationTime:
         """ The date of the memorization (read-only)
 
         Format: yyyy-MM-dd"""
-        if not self.__date:
-            return "-"
         return str(self.__date)[:-9]
+
+    @property
+    def serial_date(self):
+        """ The date represented by a serial number which is used to
+        add a new value to a cell in a spreadsheet (read-only) """
+        anchor_date = datetime.datetime(1899, 12, 30)
+        days_since_anchor = self.__date - anchor_date
+        return days_since_anchor.days
 
     @property
     def duration(self):
@@ -42,3 +48,11 @@ class MemorizationTime:
 
         Format: mm:ss """
         return str(self.__duration)[2:]
+
+    @property
+    def serial_duration(self):
+        """ The duration of the memorization represented by serial number
+        which is used when adding a new value to a spreadsheet cell (read-only) """
+        seconds = 0.000011574
+        duration = self.__duration.seconds * seconds
+        return round(duration, 9)

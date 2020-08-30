@@ -2,7 +2,7 @@
 
 import requests
 from app.notion import Notion
-from app.sheets import Sheets
+from app.sheets import Sheets, Sheet
 
 
 def is_internet():
@@ -20,16 +20,14 @@ def main():
     """ Main part of the app which gets the data
     and creates the Sheet """
     notion = Notion()
-    for time in notion.memorization_times:
-        print(f"Time: {time.duration} \t Date: {time.date}")
+    sheets = Sheets()
+
+    sheet = Sheet("SheetOne", notion.memorization_times).get
+    sheets.create_spreadsheet("Card Memorization", sheet)
 
 
 if __name__ == "__main__":
     print("Starting app...")
 
-    # if is_internet():
-    #     main()
-    sheets = Sheets()
-    sheetId = sheets.create_spreadsheet("Created from Python")
-
-    print(f"The ID of the Spreadsheet: {sheetId}")
+    if is_internet():
+        main()
