@@ -41,6 +41,7 @@ class Sheets:
                 pickle.dump(creds, token)
 
         self.__service = build("sheets", "v4", credentials=creds)
+        self.__first_sheet_id = ""
 
     def create_spreadsheet(self, title: str, sheet) -> str:
         """ Create a new spreadsheet with the 'title'
@@ -66,12 +67,51 @@ class Sheets:
 
         spreadsheet = (
             self.__service.spreadsheets()  # pylint: disable=maybe-no-member
-            .create(body=spreadsheet, fields="spreadsheetId")
+            .create(body=spreadsheet, fields="spreadsheetId,sheets")
             .execute()
         )
 
         print("Spreadsheet created")
+        self.__first_sheet_id = spreadsheet["sheets"][0]["properties"]["sheetId"]
+
         return spreadsheet.get("spreadsheetId")
+
+    def create_chart(
+        self, title: str, spreadsheet_id: str, sheet_id: int, value_count: int
+    ):
+        """ Create a chart
+
+        Call only after a spreadsheet with datas was created
+
+        Parameters
+        ----------
+        title : str
+            The title of the Chart
+        spreadsheet_id : str
+            The id of the spreadsheet in which to create the chart
+        sheet_id : int
+            The id of the sheet in the spreadsheet in which to create
+            the chart
+        value_count : int
+            How many values must be represented on the chart
+        """
+        chart_request = Chart(
+            title=title, sheet_id=sheet_id, value_count=value_count
+        ).get_request
+        request = self.__service.spreadsheets().batchUpdate( # pylint: disable=maybe-no-member
+            spreadsheetId=spreadsheet_id, body=chart_request
+        )
+        request.execute()
+        print("Chart created")
+
+    @property
+    def first_sheet_id(self):
+        """ Returns the id of the first sheet (read-only)
+
+        Accessible only after a spreadsheet was created"""
+        if self.__first_sheet_id:
+            return self.__first_sheet_id
+        raise RuntimeError("First the create_spreadsheet must be called")
 
 
 class Sheet:
@@ -204,3 +244,95 @@ class MemorizationTimeRow:
     def get(self):
         """ Returns the JSON representation of the row (read-only) """
         return self.__row
+
+
+class Chart:
+    """ A Chart for representing the memorization times """
+
+    def __init__(self, title: str, sheet_id: str, value_count: int):
+        """ Create a Chart,  with the given title, from the memorization data
+        on the sheet with the given sheet_id
+
+        Parameters
+        ----------
+        title : str
+            The title of the Chart
+        sheet_id : int
+            The id of the sheet in the spreadsheet in which to create
+            the chart
+        value_count : int
+            How many values must be represented on the chart
+        """
+        requests = [
+            {
+                "addChart": {
+                    "chart": {
+                        "spec": {
+                            "title": title,
+                            "basicChart": {
+                                "chartType": "LINE",
+                                "legendPosition": "NO_LEGEND",
+                                "axis": [
+                                    {"position": "BOTTOM_AXIS", "title": "Date"},
+                                    {"position": "LEFT_AXIS", "title": "Time"},
+                                ],
+                                "domains": [
+                                    {
+                                        "domain": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheet_id,
+                                                        "startRowIndex": 0,
+                                                        "endRowIndex": value_count,
+                                                        "startColumnIndex": 0,
+                                                        "endColumnIndex": 1,
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "series": [
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheet_id,
+                                                        "startRowIndex": 0,
+                                                        "endRowIndex": value_count,
+                                                        "startColumnIndex": 1,
+                                                        "endColumnIndex": 2,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "LEFT_AXIS",
+                                    }
+                                ],
+                            },
+                        },
+                        "position": {
+                            "overlayPosition": {
+                                "anchorCell": {
+                                    "sheetId": sheet_id,
+                                    "rowIndex": 3,
+                                    "columnIndex": 3,
+                                },
+                                "offsetXPixels": 0,
+                                "offsetYPixels": 0,
+                                "widthPixels": 850,
+                            }
+                        },
+                    }
+                }
+            }
+        ]
+        self.__body = {"requests": requests}
+
+    @property
+    def get_request(self):
+        """ Return JSON representation of a request to be made
+        to create the specified chart (read-only) """
+        return self.__body
