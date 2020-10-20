@@ -26,7 +26,7 @@ def main():
     spreadsheet_id = sheets.create_spreadsheet("Card Memorization", sheet)
 
     sheet_id = sheets.first_sheet_id
-    value_count = len(notion.memorization_times)
+    value_count = len(notion.memorization_times) + 1 # add the header row to it
     sheets.create_chart(
         title="Memorization",
         spreadsheet_id=spreadsheet_id,
